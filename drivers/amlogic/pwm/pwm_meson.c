@@ -658,6 +658,8 @@ static int pwm_aml_parse_addr(struct aml_pwm_chip *chip)
 	case MESON_CPU_MAJOR_ID_TXL:
 		pwm_aml_parse_addr_txl(chip);
 	break;
+	case MESON_CPU_MAJOR_ID_TXLX:
+		pwm_aml_parse_addr_txlx(chip);
 	break;
 	default:
 		dev_err(chip->chip.dev, "not support soc\n");
@@ -722,6 +724,12 @@ static int pwm_aml_parse_dt(struct aml_pwm_chip *chip)
 	case MESON_CPU_MAJOR_ID_TXL:
 		if ((output_co > AML_PWM_GXTVBB_NUM) ||
 			(clock_co > AML_PWM_GXTVBB_NUM)) {
+			goto err;
+		}
+	break;
+	case MESON_CPU_MAJOR_ID_TXLX:
+		if ((output_co > AML_PWM_TXLX_NUM) ||
+			(clock_co > AML_PWM_TXLX_NUM)) {
 			goto err;
 		}
 	break;
@@ -793,6 +801,9 @@ static int pwm_aml_probe(struct platform_device *pdev)
 	case MESON_CPU_MAJOR_ID_GXL:
 	case MESON_CPU_MAJOR_ID_GXM:
 	case MESON_CPU_MAJOR_ID_TXL:
+		chip->inverter_mask = BIT(chip->chip.npwm/2) - 1;
+		break;
+	case MESON_CPU_MAJOR_ID_TXLX:
 		chip->inverter_mask = BIT(chip->chip.npwm/2) - 1;
 		break;
 	default:
