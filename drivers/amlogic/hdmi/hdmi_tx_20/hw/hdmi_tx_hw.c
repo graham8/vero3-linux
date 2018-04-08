@@ -2355,6 +2355,12 @@ static void set_aud_info_pkt(struct hdmitx_dev *hdev,
 		hdmitx_set_reg_bits(HDMITX_DWC_FC_AUDICONF0, 7, 4, 3);
 		hdmitx_wr_reg(HDMITX_DWC_FC_AUDICONF2, 0x13);
 		break;
+	/* DTS-HD-HRA */
+	case CT_DTS_HD:
+		hdmi_print(INF, AUD "Audio Type: DTS-HD\n");
+		hdmitx_set_reg_bits(HDMITX_DWC_FC_AUDICONF0, 1, 4, 3);
+		hdmitx_wr_reg(HDMITX_DWC_FC_AUDICONF2, 0x00);
+		break;
 	case CT_PCM:
 		hdmi_print(INF, AUD "Audio Type: PCM  Audio Channels: %u, Speaker layout: 0x%x\n",
 				audio_param->channel_num + 1, hdev->speaker_layout);
@@ -2393,9 +2399,6 @@ static void set_aud_info_pkt(struct hdmitx_dev *hdev,
 		switch (audio_param->type) {
 			case CT_DTS:
 				hdmi_print(INF, AUD "Audio Type: DTS\n");
-				break;
-			case CT_DTS_HD:
-				hdmi_print(INF, AUD "Audio Type: DTS-HD\n");
 				break;
 			case CT_AC_3:
 				hdmi_print(INF, AUD "Audio Type: AC3\n");
@@ -2514,10 +2517,16 @@ static void set_aud_samp_pkt(struct hdmitx_dev *hdev,
 					break;
 			}
 		break;
+	case CT_DTS_HD:
 	case CT_AC_3:
 	case CT_DOLBY_D:
 	case CT_DTS:
-	case CT_DTS_HD:
+		hdmitx_set_reg_bits(HDMITX_DWC_AUD_SPDIF1, 1, 7, 1);
+		hdmitx_set_reg_bits(HDMITX_DWC_AUD_SPDIF1, 0, 6, 1);
+		//hdmitx_set_reg_bits(HDMITX_DWC_AUD_CONF2, 1, 0, 1);
+		hdmitx_set_reg_bits(HDMITX_DWC_AUD_SPDIF1, 24, 0, 5);
+		hdmitx_set_reg_bits(HDMITX_DWC_FC_AUDSCONF, 0, 0, 1);
+		break;
 	default:
 		hdmitx_set_reg_bits(HDMITX_DWC_AUD_SPDIF1, 0, 7, 1);
 		hdmitx_set_reg_bits(HDMITX_DWC_AUD_SPDIF1, 0, 6, 1);
@@ -2571,8 +2580,8 @@ static int hdmitx_set_audmode(struct hdmitx_dev *hdev,
 		tx_aud_src = 0;
 
 	/* if hdev->aud_output_ch is true, select I2S as 8ch in, 2ch out */
-	if (hdev->aud_output_ch)
-		tx_aud_src = 1;
+//	if (hdev->aud_output_ch)
+//		tx_aud_src = 1;
 
 	pr_info("hdmitx tx_aud_src = %d\n", tx_aud_src);
 

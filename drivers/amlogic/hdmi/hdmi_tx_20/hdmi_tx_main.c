@@ -2388,11 +2388,11 @@ static unsigned char *aud_type_string[] = {
 	"CT_ATRAC",
 	"CT_ONE_BIT_AUDIO",
 	"CT_DOLBY_D",
-	"CT_DTS_HD (HRA/MA/X)",
+	"CT_DTS_HD",
 	"CT_MAT",
 	"CT_DST",
 	"CT_WMA",
-	"CT_MAX",
+	"CT_MAX"
 };
 
 static struct size_map aud_size_map_ss[] = {
@@ -2449,8 +2449,10 @@ static int hdmitx_notify_callback_a(struct notifier_block *block,
 
 	if (audio_param->type != cmd) {
 		hdmi_print(INF, AUD "aout notify format %s was %s\n",
-			aud_type_string[cmd & 0xff],
-			aud_type_string[audio_param->type & 0xff]);
+			(cmd == CT_DTS_HD_MA) ? \
+			"CT_DTS_HD (MA/X)" : aud_type_string[cmd],
+			(audio_param->type == CT_DTS_HD_MA) ? \
+			"CT_DTS_HD (MA/X)" : aud_type_string[audio_param->type]);
 		audio_param->type = cmd;
 		hdmitx_device.audio_param_update_flag = 1;
 	}
@@ -2463,11 +2465,24 @@ static int hdmitx_notify_callback_a(struct notifier_block *block,
 
 	if (audio_param->channel_num !=
 		(substream->runtime->channels - 1)) {
-		hdmi_print(INF, AUD "aout notify channels %d was %d\n", substream->runtime->channels, audio_param->channel_num+1);
-		audio_param->channel_num =
-		substream->runtime->channels - 1;
-		hdmitx_device.audio_param_update_flag = 1;
+		/* fix for DTS-HD-HRA */
+		if (cmd == CT_DTS_HD){
+		   if (audio_param->channel_num != 1){
+			audio_param->channel_num = 1;
+			hdmi_print(INF, AUD "aout notify channels set to 2 for DTS-HD");
+			hdmitx_device.audio_param_update_flag = 1;
+		   }
+		   else
+			  	hdmi_print(INF, AUD "channels already set to 2 for DTS-HD"); 
+		}
+		else {
+			hdmi_print(INF, AUD "aout notify channels %d was %d\n", substream->runtime->channels, audio_param->channel_num+1);
+			audio_param->channel_num =
+				substream->runtime->channels - 1;
+			hdmitx_device.audio_param_update_flag = 1;
+		}
 	}
+
 	hdmi_print(INF, AUD "hdmi_ch: %d speaker_layout: %d\n", hdmi_ch, hdmitx_device.speaker_layout);
 	if (hdmitx_device.speaker_layout != hdmi_ch){
 		if ((hdmi_ch == 0 && substream->runtime->channels == 2) || hdmi_ch > 0) {
