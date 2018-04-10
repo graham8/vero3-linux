@@ -52,9 +52,7 @@ static void __iomem *reg_base_aobus;
 #define	HHI_AUD_CLK_CNTL		OFFSET(0x5e)
 #define	HHI_AUD_CLK_CNTL2		OFFSET(0x64)
 #define	HHI_BT656_CLK_CNTL		OFFSET(0xf5)
-#define	HHI_VDIN_MEAS_CLK_CNTL	OFFSET(0x94)
 #define	HHI_VID_LOCK_CLK_CNTL		OFFSET(0xf2)
-#define	HHI_PCM_CLK_CNTL		OFFSET(0x96)
 
 #define gxl_RSTC_N_REGS	6
 #define gxl_AO_OFF		((gxl_RSTC_N_REGS - 1) * BITS_PER_LONG + 4)
@@ -64,17 +62,11 @@ PNAME(mux_mali_1_p) = {"xtal", "gp0_pll", "mpll_clk_out1", "mpll_clk_out2",
 		"fclk_div7", "fclk_div4", "fclk_div3", "fclk_div5"};
 PNAME(mux_mali_p)   = {"clk_mali_0", "clk_mali_1"};
 PNAME(mpll) = {"fixed_pll"};
-PNAME(cts_pdm_p) = {"cts_amclk", "mpll_clk_out0",
-				"mpll_clk_out1", "mpll_clk_out2"};
+PNAME(cts_pdm_p) = {"amclk", "mpll_clk_out0", "mpll_clk_out1", "mpll_clk_out2"};
 PNAME(cts_am_p) = {"ddr_pll_clk", "mpll_clk_out0", "mpll_clk_out1",
 							"mpll_clk_out2"};
 PNAME(cts_i958_p) = {"NULL", "mpll_clk_out0", "mpll_clk_out1", "mpll_clk_out2"};
 PNAME(cts_spdif_p) = {"cts_amclk", "cts_i958"};
-
-PNAME(mux_pcm_0_p) = {"mpll_clk_out0", "fclk_div4", "fclk_div3", "fclk_div5"};
-PNAME(mux_pcm_1_p) = {"mux_pcm_0_p"};
-
-
 PNAME(mux_vapb_0_p) = {"fclk_div4", "fclk_div3", "fclk_div5", "fclk_div7"};
 PNAME(mux_vapb_1_p) = {"fclk_div4", "fclk_div3", "fclk_div5", "fclk_div7"};
 
@@ -84,8 +76,6 @@ PNAME(cts_bt656_clk0_p) = {"fclk_div2", "fclk_div3", "fclk_div5", "fclk_div7"};
 
 PNAME(cts_vid_lock_clk_p) = {"xtal", "cts_encl_clk", "cts_enci_clk",
 							"cts_encp_clk"};
-PNAME(cts_vdin_meas_clk_p) = {"xtal", "fclk_div4", "fclk_div3", "fclk_div5",
-		"vid_pll_clk", "vid2_pll_clk"};
 
 /* fixed rate clocks generated outside the soc */
 static struct amlogic_fixed_rate_clock gxl_fixed_rate_ext_clks[] __initdata = {
@@ -148,8 +138,7 @@ static struct amlogic_clk_branch clk_branches[] __initdata = {
 	COMPOSITE(CLK_PDM, "cts_pdm", cts_pdm_p,
 			CLK_SET_RATE_NO_REPARENT,
 			HHI_AUD_CLK_CNTL3, 17, 2, 0,
-			HHI_AUD_CLK_CNTL3, 0, 16,
-			CLK_DIVIDER_ROUND_CLOSEST,
+			HHI_AUD_CLK_CNTL3, 0, 16, 0,
 			HHI_AUD_CLK_CNTL3, 16, 0),
 
 	COMPOSITE(CLK_I958, "cts_i958", cts_i958_p,
@@ -158,20 +147,6 @@ static struct amlogic_clk_branch clk_branches[] __initdata = {
 			HHI_AUD_CLK_CNTL2, 16, 8,
 			CLK_DIVIDER_ROUND_CLOSEST,
 			HHI_AUD_CLK_CNTL2, 24, 0),
-
-	COMPOSITE(CLK_PCM_MCLK, "clk_pcm_mclk", mux_pcm_0_p,
-			CLK_SET_RATE_NO_REPARENT,
-			HHI_PCM_CLK_CNTL, 10, 2, 0,
-			HHI_PCM_CLK_CNTL, 0, 9,
-			CLK_DIVIDER_ROUND_CLOSEST,
-			HHI_PCM_CLK_CNTL, 9, 0),
-
-	COMPOSITE_NOMUX(CLK_PCM_SCLK, "clk_pcm_sclk", mux_pcm_1_p,
-			CLK_SET_RATE_NO_REPARENT,
-			HHI_PCM_CLK_CNTL,
-			HHI_PCM_CLK_CNTL, 16, 5,
-			CLK_DIVIDER_ROUND_CLOSEST,
-			HHI_PCM_CLK_CNTL, 22, 0),
 
 	COMPOSITE(CLK_BT656_CLK0, "cts_bt656_clk0", cts_bt656_clk0_p,
 			CLK_SET_RATE_NO_REPARENT,
@@ -192,11 +167,6 @@ static struct amlogic_clk_branch clk_branches[] __initdata = {
 			HHI_VID_LOCK_CLK_CNTL, 8, 2, 0,
 			HHI_VID_LOCK_CLK_CNTL, 0, 7, 0,
 			HHI_VID_LOCK_CLK_CNTL, 7, 0),
-	COMPOSITE(CLK_VDIN_MEAS_CLK, "cts_vdin_meas_clk", cts_vdin_meas_clk_p,
-			CLK_SET_RATE_NO_REPARENT,
-			HHI_VDIN_MEAS_CLK_CNTL, 9, 3, 0,
-			HHI_VDIN_MEAS_CLK_CNTL, 0, 7, 0,
-			HHI_VDIN_MEAS_CLK_CNTL, 8, 0),
 };
 static struct mpll_clk_tab mpll_tab[] __initdata = {
 	MPLL("mpll_clk_out0", mpll, HHI_MPLL_CNTL7, HHI_MPLL_CNTL,
