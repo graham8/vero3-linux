@@ -2562,10 +2562,13 @@ static void audio_mute_op(bool flag)
 	}
 }
 
+static struct hdmitx_audpara *cur_audio_param;
+
 static int hdmitx_set_audmode(struct hdmitx_dev *hdev,
 	struct hdmitx_audpara *audio_param)
 {
 	unsigned int data32;
+	cur_audio_param = audio_param;
 
 	if (!hdev)
 		return 0;
@@ -3035,7 +3038,7 @@ static void hdmitx_debug(struct hdmitx_dev *hdev, const char *buf)
 		hdmitx_dump_inter_timing();
 		return;
 	} else if (strncmp(tmpbuf, "testaudio", 9) == 0) {
-		hdmitx_set_audmode(hdev, NULL);
+		hdmitx_set_audmode(hdev, cur_audio_param);
 	} else if (strncmp(tmpbuf, "dumpintr", 8) == 0) {
 		hdmitx_dump_intr();
 	} else if (strncmp(tmpbuf, "testhdcp", 8) == 0) {
